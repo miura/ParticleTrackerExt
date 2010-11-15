@@ -1,8 +1,11 @@
 import ij.*;
+import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.PlugInFilter;
 import ij.plugin.filter.Convolver;
 import ij.plugin.filter.Duplicater;
 import ij.process.*;
+import ij.util.Tools;
+import ij.measure.ResultsTable;
 
 import ij.text.*;
 import ij.measure.*;
@@ -2203,6 +2206,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				if (sd.getDirectory() == null || sd.getFileName() == null) return; 
 				// write full report to file
 				write2File(sd.getDirectory(), sd.getFileName(), getFullReport().toString());
+				transferParticlesToResultsTable(); //20101115
 				return;
 			}
 			/* display full report on the text_panel*/
@@ -3318,5 +3322,71 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	int getRadius() {
         return this.radius;
     }
+	
+	public void transferParticlesToResultsTable(){
+		//String fullrepo = getFullReport().toString();
+		StringBuffer ptcls = new StringBuffer();
+		for (int i = 0; i < frames.length; i++) {
+			ptcls.append(this.frames[i].getFullFrameInfo());
+		}			
 
+		ResultsTable rt = Analyzer.getResultsTable();//new ResultsTable();
+		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
+				if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
+					rt.reset();
+				} else
+					return;
+		}
+
+		String[] linesA = Tools.split(ptcls.toString(), "\n");
+		int frameCount = 0;
+		for (int i = 0; i < linesA.length; i++){
+			String tempstr = linesA[i];
+			String comparestr = "% Frame " + Integer.toString(frameCount) + ":";
+			if (tempstr == comparestr){
+				do 
+					i++; 
+				while (!linesA[i].startsWith("%	Particles after non-particle discrimination")); 
+				String comparestr3="% Frame " + frameCount+1 + ":";
+				i++; //one line forward
+				do {
+					String[] param1A=Tools.split(linesA[i], "\t");
+					String[] paramA=Tools.split(param1A[1], " ");
+					//String tempstr2="";
+					for (int j = 0; j<paramA.length; j++) {
+						//tempstr2=tempstr2+paramA[j]+"\t";
+						rt.addValue("frame", frameCount);				
+						rt.addValue("x", Double.parseDouble(paramA[0]));
+						rt.addValue("y", Double.parseDouble(paramA[1]));						
+					}
+					//tempstr =""+ frameCount + "\t" + tempstr2;
+					//print(CommaEliminator(tempstr));
+					i++;
+					
+				} while ((linesA[i]!=comparestr3) && !(linesA[i].startsWith("% Trajectory linking")));
+				frameCount ++;
+				i--;
+			}				
+			
+		}
+	}
+
+	/*
+	public void transferTrajectoriesToResultsTable(){
+		String fullrepo = getFullReport().toString();
+		String[] linesA = Tools.split(fullrepo, "\n");
+		ResultsTable rt = Analyzer.getResultsTable();//new ResultsTable();
+		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
+				if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
+					rt.reset();
+				} else
+					return;
+		}
+				
+		for (int i = 0; i < linesA.length; i++){
+			String[] valA = Tools.split(linesA[i], " ");
+			
+		}
+	}
+	*/
 }
