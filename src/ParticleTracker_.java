@@ -44,6 +44,15 @@ import java.util.*;
  * 
  * @version 1.5. September, 2006 (requires: ImageJ 1.36b or higher)
  * @author Guy Levy - Academic guest at the <a href="http://www.cbl.ethz.ch/">Computational Biophysics Lab<a>, ETH Zurich
+ * 
+ * modification made by:
+ * 
+ * @version 1.6 November 2010 (requires: ImageJ 1.44 or higher)
+ * @author Kota Miura - CMCI, EMBL Heidelberg  (http://cmci.embl.de)
+ * 
+ * add functionality to automatically transfer resulting data to result table in ImageJ, 
+ * so the estimated trajetories (and/or) segmented particle positions could be used for further analysis. 
+ * 
  */
 public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListener, AdjustmentListener   {	
 	
