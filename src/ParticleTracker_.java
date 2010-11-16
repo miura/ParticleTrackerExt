@@ -51,7 +51,7 @@ import java.util.*;
  * @author Kota Miura - CMCI, EMBL Heidelberg  (http://cmci.embl.de)
  * 
  * add functionality to automatically transfer resulting data to result table in ImageJ, 
- * so the estimated trajetories (and/or) segmented particle positions could be used for further analysis. 
+ * so the estimated trajectories (and/or) segmented particle positions could be used for further analysis. 
  * 
  */
 public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListener, AdjustmentListener   {	
@@ -187,7 +187,8 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		
 		/* Display results window */
 		this.trajectory_tail = this.frames_number;
-		results_window = new ResultsWindow("Results");
+		//results_window = new ResultsWindow("Results");
+		results_window = new ResultsWindow("ParticleTracker Results");		
 		results_window.configuration_panel.append(getConfiguration().toString());
 		results_window.configuration_panel.append(getInputFramesInformation().toString());	
 		results_window.text_panel.appendLine("Particle Tracker DONE!");
@@ -1961,7 +1962,9 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		private TextPanel text_panel, configuration_panel;
 		private Button view_static, save_report, display_report, dummy,
 						plot_particle, trajectory_focus, trajectory_info, traj_in_area_info, area_focus;
-		
+		private Button transfer_particles, transfer_trajs; //in panel left
+		private Button transfer_particle, transfer_traj; //in panel center
+		private Button dummy2, dummy3;				//in panel right
 		private Label per_traj_label, area_label, all_label;
 		private MenuItem tail, mag_factor, relink_particles;
 		
@@ -2018,14 +2021,19 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        all_label = new Label("All Trajectories", Label.CENTER);        
 	        
 	        /* Create 3 buttons and set this class to be their ActionListener */
+	        /* + additional two buttons for transfering data to IJ results window */
 	        save_report = new Button(" Save Full Report");
 	        save_report.addActionListener(this);
 	        display_report = new Button(" Display Full Report");
 	        display_report.addActionListener(this);
 			view_static = new Button(" Visualize All Trajectories ");	
 	        view_static.addActionListener(this);	        
-	        
-	        /* Add the Label and 3 buttons to the all_options Panel */
+			transfer_particles = new Button(" Transfer Particles ");	
+			transfer_particles.addActionListener(this);	 
+			transfer_trajs = new Button(" Transfer Trajectories ");	
+			transfer_trajs.addActionListener(this);	 
+			
+	        /* Add the Label and 5 buttons to the all_options Panel */
 	        gridbag.setConstraints(all_label, c);
 	        all_options.add(all_label);
 	        gridbag.setConstraints(view_static, c);
@@ -2034,6 +2042,10 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        all_options.add(save_report);
 	        gridbag.setConstraints(display_report, c);
 	        all_options.add(display_report);
+	        gridbag.setConstraints(transfer_particles, c);
+	        all_options.add(transfer_particles);
+	        gridbag.setConstraints(transfer_trajs, c);
+	        all_options.add(transfer_trajs);
 	        /*--------------------------------------------------*/
 	        
 	        
@@ -2054,7 +2066,10 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        trajectory_info.addActionListener(this);
         	plot_particle = new Button(" Plot ");
         	plot_particle.addActionListener(this);
-        	
+        	transfer_particle = new Button(" Transfer --");
+        	transfer_particle.addActionListener(this);
+        	transfer_traj = new Button(" Transfer Selected Trajectory ");
+        	transfer_traj.addActionListener(this);
         	/* Add the Label and 3 buttons to the per_traj_options Panel */
 	        gridbag.setConstraints(per_traj_label, c);
 	        per_traj_options.add(per_traj_label);
@@ -2064,8 +2079,15 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        per_traj_options.add(trajectory_info);
         	gridbag.setConstraints(plot_particle, c);
         	per_traj_options.add(plot_particle);
+        	
+        	gridbag.setConstraints(transfer_particle, c);
+        	per_traj_options.add(transfer_particle);
+        	gridbag.setConstraints(transfer_traj, c);
+        	per_traj_options.add(transfer_traj);
         	// the plot_particle option is only avalible for text_files_mode
 	        if (!text_files_mode) plot_particle.setEnabled(false);
+	        transfer_particle.setEnabled(false); 		//TODO
+	        transfer_traj.setEnabled(false);			//TODO
 	        /*--------------------------------------------------*/
 	        
 	        
@@ -2087,6 +2109,10 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        /* Create 1 dummy button for coherent display */
 	        dummy = new Button("");
 	        dummy.setEnabled(false);
+	        dummy2 = new Button("");
+	        dummy2.setEnabled(false);
+	        dummy3 = new Button("");
+	        dummy3.setEnabled(false);
 	        
 	        /* Add the Label and 3 buttons to the area_options Panel */
 	        gridbag.setConstraints(area_label, c);
@@ -2097,6 +2123,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        area_options.add(traj_in_area_info);
 	        gridbag.setConstraints(dummy, c);
 	        area_options.add(dummy);
+	        gridbag.setConstraints(dummy2, c);
+	        area_options.add(dummy2);
+	        gridbag.setConstraints(dummy3, c);
+	        area_options.add(dummy3);
+	        
 	        /*--------------------------------------------------*/
 	        
 	        /* Create a Panel to contain all the 3 first panels*/ 
@@ -2215,7 +2246,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				if (sd.getDirectory() == null || sd.getFileName() == null) return; 
 				// write full report to file
 				write2File(sd.getDirectory(), sd.getFileName(), getFullReport().toString());
-				transferParticlesToResultsTable(); //20101115
+				
 				return;
 			}
 			/* display full report on the text_panel*/
@@ -2225,6 +2256,20 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				text_panel.append(getFullReport().toString());
 				return;				
 			}
+			
+			/* transfer segmented particle coordinates to ImageJ results window*/
+			if (source == transfer_particles) {
+				System.out.println("particle coordinates to results window");
+				transferParticlesToResultsTable(); // ver 1.4 20101115
+				return;
+			}
+			/* transfer trajectory coordinates to ImageJ results window*/
+			if (source == transfer_trajs) {
+				System.out.println("trajectory coordinates to results window");
+				return;
+			}
+			
+			
 			/* check vadilty of state for area seletion*/
 			if (source == area_focus || source == traj_in_area_info) {
 				// for these options, an area (ROI) has to be selected on the display
@@ -3334,12 +3379,18 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	
 	public void transferParticlesToResultsTable(){
 		//String fullrepo = getFullReport().toString();
+		System.out.println("in outer method transferParticlesToResultsTable()");
 		StringBuffer ptcls = new StringBuffer();
 		for (int i = 0; i < frames.length; i++) {
 			ptcls.append(this.frames[i].getFullFrameInfo());
 		}			
-
-		ResultsTable rt = Analyzer.getResultsTable();//new ResultsTable();
+		
+		ResultsTable rt; 
+		rt = Analyzer.getResultsTable();//new ResultsTable();
+		//if (rt == null) {
+		//	rt = new ResultsTable();
+		System.out.println("Result table constructed");
+		//}
 		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
 				if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
 					rt.reset();
@@ -3348,25 +3399,30 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		}
 
 		String[] linesA = Tools.split(ptcls.toString(), "\n");
+		//IJ.log(linesA[0]);
 		int frameCount = 0;
 		for (int i = 0; i < linesA.length; i++){
 			String tempstr = linesA[i];
 			String comparestr = "% Frame " + Integer.toString(frameCount) + ":";
-			if (tempstr == comparestr){
+			if (tempstr.equals(comparestr)){
+				IJ.log(linesA[i]);
 				do 
 					i++; 
 				while (!linesA[i].startsWith("%	Particles after non-particle discrimination")); 
 				String comparestr3="% Frame " + frameCount+1 + ":";
 				i++; //one line forward
 				do {
+					System.out.println(linesA[i]);
 					String[] param1A=Tools.split(linesA[i], "\t");
+					for (int j=0; j<param1A.length; j++) System.out.println(param1A[j]);
 					String[] paramA=Tools.split(param1A[1], " ");
 					//String tempstr2="";
 					for (int j = 0; j<paramA.length; j++) {
 						//tempstr2=tempstr2+paramA[j]+"\t";
 						rt.addValue("frame", frameCount);				
 						rt.addValue("x", Double.parseDouble(paramA[0]));
-						rt.addValue("y", Double.parseDouble(paramA[1]));						
+						rt.addValue("y", Double.parseDouble(paramA[1]));
+						//System.out.println("x:" + paramA[0]+ " y:"+paramA[1]);
 					}
 					//tempstr =""+ frameCount + "\t" + tempstr2;
 					//print(CommaEliminator(tempstr));
@@ -3378,6 +3434,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 			}				
 			
 		}
+		rt.show("Results");
 	}
 
 	/*
