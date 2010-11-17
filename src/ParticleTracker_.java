@@ -1415,6 +1415,9 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 			}
 			return coords;
 		}
+		private Particle[] getParticlesAfterDiscrimination() {
+			return particles;
+		}
 		
 		/**
 		 * Generates a "ready to print" StringBuffer with all the particles initial
@@ -2045,9 +2048,9 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        display_report.addActionListener(this);
 			view_static = new Button(" Visualize All Trajectories ");	
 	        view_static.addActionListener(this);	        
-			transfer_particles = new Button(" Copy Particles to Results");	
+			transfer_particles = new Button(" Segmented Particles to Table");	
 			transfer_particles.addActionListener(this);	 
-			transfer_trajs = new Button(" Copy Trajectories to Results");	
+			transfer_trajs = new Button(" Linked Trajectories to Table");	
 			transfer_trajs.addActionListener(this);	 
 			
 	        /* Add the Label and 5 buttons to the all_options Panel */
@@ -2083,9 +2086,9 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        trajectory_info.addActionListener(this);
         	plot_particle = new Button(" Plot ");
         	plot_particle.addActionListener(this);
-        	transfer_particle = new Button(" Transfer --");
+        	transfer_particle = new Button("");
         	transfer_particle.addActionListener(this);
-        	transfer_traj = new Button(" Transfer Selected Trajectory ");
+        	transfer_traj = new Button("Selected Trajectory to Table");
         	transfer_traj.addActionListener(this);
         	/* Add the Label and 3 buttons to the per_traj_options Panel */
 	        gridbag.setConstraints(per_traj_label, c);
@@ -2283,6 +2286,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 			/* transfer trajectory coordinates to ImageJ results window*/
 			if (source == transfer_trajs) {
 				System.out.println("trajectory coordinates to results window");
+				transferTrajectoriesToResultTable();
 				return;
 			}
 			
@@ -3394,83 +3398,6 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
         return this.radius;
     }
 	
-	public void transferParticlesToResultsTableOld(){
-		//String fullrepo = getFullReport().toString();
-		System.out.println("in outer method transferParticlesToResultsTable()");
-		StringBuffer ptcls = new StringBuffer();
-		for (int i = 0; i < frames.length; i++) {
-			ptcls.append(this.frames[i].getFullFrameInfo());
-			//ptcls.append(this.frames[i].getFrameInfoAfterDiscrimination());
-		}			
-		
-		ResultsTable rt = null; 
-		try {
-			rt = ResultsTable.getResultsTable();//static, the one in Analyze
-		} catch (Exception e) {}
-		//if (rt == null) {
-		//	rt = new ResultsTable();
-		System.out.println("Result table constructed");
-		//}
-		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
-				if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
-					rt.reset();
-				} else
-					return;
-		}
-
-		String[] linesA = Tools.split(ptcls.toString(), "\n");
-		IJ.log(linesA[0]);
-		int frameCount = 0;
-		for (int i = 0; i < linesA.length; i++){
-			String tempstr = linesA[i];
-			String comparestr = "% Frame " + Integer.toString(frameCount) + ":";
-			String comparestr3= "% Frame " + Integer.toString(frameCount+1) + ":";
-			if (tempstr.equals(comparestr)){
-				System.out.println(linesA[i]);
-				do {
-					i++; 
-				} while (!(linesA[i].startsWith("%	Particles after non-particle discrimination"))); 
-				i++; //one line forward
-				System.out.println(linesA[i]);
-				do {
-					
-					String[] param1A=Tools.split(linesA[i], "\t");
-					if (param1A.length >1){
-						//for (int j=0; j<param1A.length; j++) System.out.println(param1A[j]);
-						String[] paramA=Tools.split(param1A[1], " ");
-					
-						for (int j = 0; j<paramA.length; j++) {
-							//tempstr2=tempstr2+paramA[j]+"\t";
-							rt.incrementCounter();
-							if (rt.getCounter() == 0) {
-								rt.setValue("frame", 0, frameCount);
-								rt.setValue("x", 0, Double.parseDouble(paramA[0]));
-								rt.setValue("y", 0, Double.parseDouble(paramA[1]));
-							} else {
-								rt.addValue("frame", frameCount);				
-								rt.addValue("x", Double.parseDouble(paramA[0]));
-								rt.addValue("y", Double.parseDouble(paramA[1]));
-							}
-							System.out.println("x:" + paramA[0]+ " y:"+paramA[1]);
-						}
-					}
-					//tempstr =""+ frameCount + "\t" + tempstr2;
-					//print(CommaEliminator(tempstr));
-					i++;
-					
-				} while (
-						(i<linesA.length) &&
-						!(linesA[i].equals(comparestr3)) && 
-						!(linesA[i].startsWith("% Trajectory linking"))
-						);
-				frameCount ++;
-				i--;
-			}				
-			
-		}
-		rt.show("Results");
-	}
-
 	public void transferParticlesToResultsTable(){
 		//String fullrepo = getFullReport().toString();
 		System.out.println("in outer method transferParticlesToResultsTable()");
@@ -3486,9 +3413,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				return;
 		}
 		Float[] coords;
+		Particle[] particles;
 		for (int i = 0; i < frames.length; i++) {
 			coords = this.frames[i].getFrameInfoAfterDiscriminationNum();
-			for (int j = 0; j < coords.length; j += 2) {
+			particles =this.frames[i].getParticlesAfterDiscrimination();
+/*			for (int j = 0; j < coords.length; j += 2) {
 				rt.incrementCounter();
 				if (rt.getCounter() == 0) {
 					rt.setValue("frame", 0, i);
@@ -3500,7 +3429,72 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 					rt.addValue("y", coords[j + 1]);
 				}
 			}
+*/
+			int rownum = 0;
+			for (int j = 0; j < particles.length; j++) {
+				rt.incrementCounter();
+				//if (rt.getCounter() == 0) {
+				rownum = rt.getCounter()-1;
+					rt.setValue("frame", rownum, particles[j].frame);
+					rt.setValue("x", rownum, particles[j].x);
+					rt.setValue("y", rownum, particles[j].y);
+					rt.setValue("m0", rownum, particles[j].m0);
+					rt.setValue("m2", rownum, particles[j].m2);
+					rt.setValue("NPscore", rownum, particles[j].score);
+				/*} else {
+					rt.addValue("frame", i);				
+					rt.addValue("x", coords[j]);
+					rt.addValue("y", coords[j + 1]);
+				}*/
+			}
+
 		}			
 		rt.show("Results");
 	}
+	
+	public void transferTrajectoriesToResultTable(){
+		System.out.println("in outer method transferTrajectoriesToResultTable()");
+		ResultsTable rt = null; 
+		try {
+			rt = ResultsTable.getResultsTable();//static, the one in Analyze
+		} catch (Exception e) {}
+		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
+			if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
+				rt.reset();
+			} else
+				return;
+		}
+		Iterator iter = all_traj.iterator();
+		int RowCounter = 0;
+		while (iter.hasNext()) {
+			Trajectory curr_traj = (Trajectory)iter.next();
+			//traj_info.append("%% Trajectory " + curr_traj.serial_number +"\n");
+			//traj_info.append(curr_traj.toStringBuffer());
+			Particle pts[] = curr_traj.existing_particles; 
+			for (int i = 0; i < pts.length; i++){
+				rt.incrementCounter();
+				if (rt.getCounter() == 0) {
+					rt.setValue("Trajectory", 0, curr_traj.serial_number);
+					rt.setValue("Frame", 0, pts[i].frame);
+					rt.setValue("x", 0, pts[i].x);
+					rt.setValue("y", 0, pts[i].y);
+					rt.setValue("m0", 0, pts[i].m0);
+					rt.setValue("m2", 0, pts[i].m2);
+					rt.setValue("NPscore", 0, pts[i].score);
+				} else {
+					rt.addValue("Trajectory", curr_traj.serial_number);
+					rt.addValue("Frame", pts[i].frame);				
+					rt.addValue("x", pts[i].x);
+					rt.addValue("y", pts[i].y);
+					rt.addValue("m0", pts[i].m0);
+					rt.addValue("m2", pts[i].m2);
+					rt.addValue("NPscore", pts[i].score);
+				}				
+			}
+			RowCounter++;
+		}
+		rt.show("Results");
+	}
+	
+	
 }
