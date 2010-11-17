@@ -1,10 +1,8 @@
 import ij.*;
-import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.PlugInFilter;
 import ij.plugin.filter.Convolver;
 import ij.plugin.filter.Duplicater;
 import ij.process.*;
-import ij.util.Tools;
 import ij.measure.ResultsTable;
 
 import ij.text.*;
@@ -1400,21 +1398,10 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		}
 		
 		/**
-		 * Generates a "ready to transfer" string with all the 
-		 * particles positions AFTER discrimination in this frame.
-		 * @return a <code>Float[]</code> with the coords
-		 * double the length of particle number 
-		 * for storing x, y coordinates. 
+		 * @return a <code>Particle[]</code> 
+		 * getter for particle object array of this frame.  
 		 * 20101116
 		 */
-		private Float[] getFrameInfoAfterDiscriminationNum() {
-			Float[] coords = new Float[particles.length*2];
-			for (int i = 0; i<this.particles.length; i++) {
-				coords[i * 2] = this.particles[i].x;
-				coords[i * 2 + 1] = this.particles[i].y;
-			}
-			return coords;
-		}
 		private Particle[] getParticlesAfterDiscrimination() {
 			return particles;
 		}
@@ -3412,40 +3399,19 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 			} else
 				return;
 		}
-		Float[] coords;
 		Particle[] particles;
+		int rownum = 0;
 		for (int i = 0; i < frames.length; i++) {
-			coords = this.frames[i].getFrameInfoAfterDiscriminationNum();
 			particles =this.frames[i].getParticlesAfterDiscrimination();
-/*			for (int j = 0; j < coords.length; j += 2) {
-				rt.incrementCounter();
-				if (rt.getCounter() == 0) {
-					rt.setValue("frame", 0, i);
-					rt.setValue("x", 0, coords[j]);
-					rt.setValue("y", 0, coords[j+1]);
-				} else {
-					rt.addValue("frame", i);				
-					rt.addValue("x", coords[j]);
-					rt.addValue("y", coords[j + 1]);
-				}
-			}
-*/
-			int rownum = 0;
 			for (int j = 0; j < particles.length; j++) {
 				rt.incrementCounter();
-				//if (rt.getCounter() == 0) {
 				rownum = rt.getCounter()-1;
-					rt.setValue("frame", rownum, particles[j].frame);
-					rt.setValue("x", rownum, particles[j].x);
-					rt.setValue("y", rownum, particles[j].y);
-					rt.setValue("m0", rownum, particles[j].m0);
-					rt.setValue("m2", rownum, particles[j].m2);
-					rt.setValue("NPscore", rownum, particles[j].score);
-				/*} else {
-					rt.addValue("frame", i);				
-					rt.addValue("x", coords[j]);
-					rt.addValue("y", coords[j + 1]);
-				}*/
+				rt.setValue("frame", rownum, particles[j].frame);
+				rt.setValue("x", rownum, particles[j].x);
+				rt.setValue("y", rownum, particles[j].y);
+				rt.setValue("m0", rownum, particles[j].m0);
+				rt.setValue("m2", rownum, particles[j].m2);
+				rt.setValue("NPscore", rownum, particles[j].score);
 			}
 
 		}			
@@ -3465,33 +3431,21 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				return;
 		}
 		Iterator iter = all_traj.iterator();
-		int RowCounter = 0;
+		int rownum = 0;
 		while (iter.hasNext()) {
 			Trajectory curr_traj = (Trajectory)iter.next();
-			//traj_info.append("%% Trajectory " + curr_traj.serial_number +"\n");
-			//traj_info.append(curr_traj.toStringBuffer());
 			Particle pts[] = curr_traj.existing_particles; 
 			for (int i = 0; i < pts.length; i++){
 				rt.incrementCounter();
-				if (rt.getCounter() == 0) {
-					rt.setValue("Trajectory", 0, curr_traj.serial_number);
-					rt.setValue("Frame", 0, pts[i].frame);
-					rt.setValue("x", 0, pts[i].x);
-					rt.setValue("y", 0, pts[i].y);
-					rt.setValue("m0", 0, pts[i].m0);
-					rt.setValue("m2", 0, pts[i].m2);
-					rt.setValue("NPscore", 0, pts[i].score);
-				} else {
-					rt.addValue("Trajectory", curr_traj.serial_number);
-					rt.addValue("Frame", pts[i].frame);				
-					rt.addValue("x", pts[i].x);
-					rt.addValue("y", pts[i].y);
-					rt.addValue("m0", pts[i].m0);
-					rt.addValue("m2", pts[i].m2);
-					rt.addValue("NPscore", pts[i].score);
-				}				
+				rownum = rt.getCounter()-1;
+				rt.setValue("Trajectory", rownum, curr_traj.serial_number);
+				rt.setValue("Frame", rownum, pts[i].frame);
+				rt.setValue("x", rownum, pts[i].x);
+				rt.setValue("y", rownum, pts[i].y);
+				rt.setValue("m0", rownum, pts[i].m0);
+				rt.setValue("m2", rownum, pts[i].m2);
+				rt.setValue("NPscore", rownum, pts[i].score);
 			}
-			RowCounter++;
 		}
 		rt.show("Results");
 	}
