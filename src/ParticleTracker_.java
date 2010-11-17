@@ -3384,7 +3384,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	int getRadius() {
         return this.radius;
     }
-	
+	/** Extracts spot segmentation results <br>and show in in ImageJ static Results Table
+	 * <br>Invoked by clicking button in ParticleTracker Results Window. 
+	 * @author  Kota Miura <a href="http://cmci.embl.de">cmci.embl.de</a>
+	 * @see ResultsWindow
+	 */
 	public void transferParticlesToResultsTable(){
 		//String fullrepo = getFullReport().toString();
 		System.out.println("in outer method transferParticlesToResultsTable()");
@@ -3417,7 +3421,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		}			
 		rt.show("Results");
 	}
-	
+	/** Extracts tracking results <br>and show in in ImageJ static Results Table
+	 * <br>Invoked by clicking button in ParticleTracker Results Window. 
+	 * @author Kota Miura <a href="http://cmci.embl.de">cmci.embl.de</a>
+	 * @see ResultsWindow
+	 */	
 	public void transferTrajectoriesToResultTable(){
 		System.out.println("in outer method transferTrajectoriesToResultTable()");
 		ResultsTable rt = null; 
