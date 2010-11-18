@@ -1,7 +1,8 @@
 import ij.*;
+import ij.plugin.Duplicator;
 import ij.plugin.filter.PlugInFilter;
 import ij.plugin.filter.Convolver;
-import ij.plugin.filter.Duplicater;
+//import ij.plugin.filter.Duplicater;
 import ij.process.*;
 import ij.measure.ResultsTable;
 
@@ -3022,8 +3023,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		if (duplicated_imp == null) {
 			// if there is no image to generate the view on:
 			// generate a new image by duplicating the original image
-			Duplicater dup = new Duplicater();
-			duplicated_imp= dup.duplicateStack(original_imp, new_title);
+			//Duplicater dup = new Duplicater();
+			Duplicator dup = new Duplicator();
+			//duplicated_imp= dup. duplicateStack(original_imp, new_title);
+			duplicated_imp = dup.run(original_imp);
+			duplicated_imp.setTitle(new_title);
 			if (this.text_files_mode) {
 				// there is no original image so set magnification to default(1)	
 				magnification = 1;
@@ -3434,17 +3438,17 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 		int rownum = 0;
 		while (iter.hasNext()) {
 			Trajectory curr_traj = (Trajectory)iter.next();
-			Particle pts[] = curr_traj.existing_particles; 
-			for (int i = 0; i < pts.length; i++){
+			Particle[] pts = curr_traj.existing_particles; 
+			for (Particle p : pts){	
 				rt.incrementCounter();
 				rownum = rt.getCounter()-1;
 				rt.setValue("Trajectory", rownum, curr_traj.serial_number);
-				rt.setValue("Frame", rownum, pts[i].frame);
-				rt.setValue("x", rownum, pts[i].x);
-				rt.setValue("y", rownum, pts[i].y);
-				rt.setValue("m0", rownum, pts[i].m0);
-				rt.setValue("m2", rownum, pts[i].m2);
-				rt.setValue("NPscore", rownum, pts[i].score);
+				rt.setValue("Frame", rownum, p.frame);
+				rt.setValue("x", rownum, p.x);
+				rt.setValue("y", rownum, p.y);
+				rt.setValue("m0", rownum, p.m0);
+				rt.setValue("m2", rownum, p.m2);
+				rt.setValue("NPscore", rownum, p.score);
 			}
 		}
 		rt.show("Results");
