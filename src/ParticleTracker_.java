@@ -2038,7 +2038,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 	        view_static.addActionListener(this);	        
 			transfer_particles = new Button(" Segmented Particles to Table");	
 			transfer_particles.addActionListener(this);	 
-			transfer_trajs = new Button(" Linked Trajectories to Table");	
+			transfer_trajs = new Button(" All Trajectories to Table");	
 			transfer_trajs.addActionListener(this);	 
 			
 	        /* Add the Label and 5 buttons to the all_options Panel */
@@ -2095,7 +2095,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
         	// the plot_particle option is only avalible for text_files_mode
 	        if (!text_files_mode) plot_particle.setEnabled(false);
 	        transfer_particle.setEnabled(false); 		//TODO
-	        transfer_traj.setEnabled(false);			//TODO
+	        //transfer_traj.setEnabled(false);			
 	        /*--------------------------------------------------*/
 	        
 	        
@@ -2209,9 +2209,14 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
     	 * <br><code>Button view_static</code>
     	 * <br><code>Button save_report</code>
     	 * <br><code>Button display_report</code>
+    	 * <br><code>Button transfer_particles</code>
+    	 * <br><code>Button transfer_trajs</code>
+    	 * 
     	 * <br><code>Button plot_particle</code>
     	 * <br><code>Button trajectory_focus</code>
     	 * <br><code>Button trajectory_info</code>
+    	 * <br><code>Button transfer_traj</code>
+    	 * 
     	 * <br><code>Button traj_in_area_info</code>
     	 * <br><code>Button area_focus</code>
     	 * <br><code>MenuItem tail</code>
@@ -2319,7 +2324,7 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				return;
 			}
 			/* check vadilty of state for Trajectory seletion */
-			if (source == trajectory_focus || source == trajectory_info) {
+			if (source == trajectory_focus || source == trajectory_info || source == transfer_traj) {
 				// These options can only be requested after selecting a trajectory from the view 
 				// varify it here
 				if (chosen_traj == -1) {
@@ -2346,6 +2351,11 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				results_window.text_panel.append(traj.toString());
 				return;
 			}
+			if (source == transfer_traj) {
+				Trajectory traj = all_traj.elementAt(chosen_traj-1);
+				transferSelectedTrajectoriesToResultTable(traj);
+			}
+			
 			/* define the trajectory displyed tail*/
 			if (source == tail) {
 				int ch_num = Math.max(frames_number/50+2,2);
@@ -3457,6 +3467,40 @@ public class ParticleTracker_ implements PlugInFilter, Measurements, ActionListe
 				rt.setValue("m2", rownum, p.m2);
 				rt.setValue("NPscore", rownum, p.score);
 			}
+		}
+		rt.show("Results");
+	}
+	/**
+	 * corrdinates of selected trajectory (as argument) will be copied to 
+	 * ImageJ results table. 
+	 *  
+	 * @param traj
+	 */
+	public void transferSelectedTrajectoriesToResultTable(Trajectory traj){
+		System.out.println("in outer method transferSelectedTrajectoriesToResultTable(traj)");
+		ResultsTable rt = null; 
+		try {
+			rt = ResultsTable.getResultsTable();//static, the one in Analyze
+		} catch (Exception e) {}
+		if ((rt.getCounter() != 0) || (rt.getLastColumn() != -1)) {
+			if (IJ.showMessageWithCancel("Results Table", "Reset Results Table?")){
+				rt.reset();
+			} else
+				return;
+		}
+		Trajectory curr_traj = traj;
+		int rownum = 0;
+		Particle[] pts = curr_traj.existing_particles; 
+		for (Particle p : pts){	
+			rt.incrementCounter();
+			rownum = rt.getCounter()-1;
+			rt.setValue("Trajectory", rownum, curr_traj.serial_number);
+			rt.setValue("Frame", rownum, p.frame);
+			rt.setValue("x", rownum, p.x);
+			rt.setValue("y", rownum, p.y);
+			rt.setValue("m0", rownum, p.m0);
+			rt.setValue("m2", rownum, p.m2);
+			rt.setValue("NPscore", rownum, p.score);
 		}
 		rt.show("Results");
 	}
