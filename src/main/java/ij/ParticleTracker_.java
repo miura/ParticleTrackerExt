@@ -1,3 +1,5 @@
+package ij
+
 import ij.*;
 import ij.plugin.Duplicator;
 import ij.plugin.filter.PlugInFilter;

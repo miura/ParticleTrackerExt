@@ -1,6 +1,5 @@
-/ParticleTracker_.jar
-/ParticleTrackerExt.jar
-/ParticleTracker_.jar
 *.DS_Store
 *.classpath
-.settings
+.settings*
+target/classes/*
+target/maven-archiver/*
