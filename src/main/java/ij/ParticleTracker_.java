@@ -1,4 +1,4 @@
-package ij
+package ij;
 
 import ij.*;
 import ij.plugin.Duplicator;
