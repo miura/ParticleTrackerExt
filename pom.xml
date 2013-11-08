@@ -11,10 +11,10 @@
 	</parent>
 
 	<groupId>ij</groupId>
-	<artifactId>ParticleTrackerMod</artifactId>
+	<artifactId>ParticleTracker_Mod</artifactId>
   <version>1.0.0</version>
 
-	<name>plugins/ParticleTrackerMod</name>
+	<name>plugins/ParticleTracker_Mod</name>
 	<description>ETH ParticleTracker modified</description>
 
 	<dependencies>
