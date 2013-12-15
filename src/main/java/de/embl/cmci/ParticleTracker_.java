@@ -1,4 +1,4 @@
-package ij;
+package de.embl.cmci;
 
 import ij.*;
 import ij.plugin.Duplicator;

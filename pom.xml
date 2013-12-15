@@ -10,7 +10,7 @@
 		<version>1.28</version>
 	</parent>
 
-	<groupId>ij</groupId>
+	<groupId>de.embl.cmci</groupId>
 	<artifactId>ParticleTracker_Mod</artifactId>
   <version>1.0.0</version>
 
